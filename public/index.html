@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat entre amis</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Section de connexion -->
+  <div id="login">
+    <h2>Choisis un pseudo</h2>
+    <input type="text" id="usernameInput" placeholder="Ton pseudo">
+    <button onclick="setUsername()">Entrer</button>
+  </div>
+
+  <!-- Section de chat (affichée une fois le pseudo choisi) -->
+  <div id="chat" class="hidden">
+    <div id="sidebar">
+      <h3>Utilisateurs</h3>
+      <ul id="usersList"></ul>
+    </div>
+    <div id="chatWindow">
+      <h3 id="channelTitle">Canal Général</h3>
+      <div id="messages"></div>
+      <div id="typingIndicator" style="font-style: italic; height: 20px;"></div> <!-- Indicateur de frappe -->
+      <input type="text" id="messageInput" placeholder="Écris un message...">
+      <button onclick="sendMessage()">Envoyer</button>
+
+      <!-- Input pour envoyer des images -->
+      <input type="file" id="imageInput" accept="image/*">
+
+      <!-- Conteneur pour le bouton de retour au canal général, uniquement visible en mode privé -->
+      <div id="privateChatControls" style="display: none;">
+        <button onclick="switchToGeneral()">Retour au canal général</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>
