@@ -21,6 +21,17 @@
     #emoji-picker span:hover {
       background: #eee;
     }
+
+    /* 🎨 Nouveau style pour la zone de message */
+    #messageArea {
+      background-image: url('https://i.pinimg.com/originals/e2/a5/20/e2a5200ca81ee9359add0cba9cafd758.jpg');
+      background-size: cover;
+      background-position: center;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
   </style>
 </head>
 <body>
@@ -42,19 +53,21 @@
       <div id="messages"></div>
       <div id="typingIndicator" style="font-style: italic; height: 20px;"></div>
 
-      <!-- ✅ Émojis -->
-      <div id="emoji-picker">
-        <span>😀</span><span>😂</span><span>😍</span><span>😎</span><span>😭</span>
-        <span>😡</span><span>👍</span><span>🙏</span><span>💀</span><span>🎉</span><span>❤️</span>
+      <!-- ✅ Bloc stylé avec fond pour la saisie -->
+      <div id="messageArea">
+        <div id="emoji-picker">
+          <span>😀</span><span>😂</span><span>😍</span><span>😎</span><span>😭</span>
+          <span>😡</span><span>👍</span><span>🙏</span><span>💀</span><span>🎉</span><span>❤️</span>
+        </div>
+
+        <input type="text" id="messageInput" placeholder="Écris un message...">
+        <button onclick="sendMessage()">Envoyer</button>
+
+        <!-- Input pour envoyer des images -->
+        <input type="file" id="imageInput" accept="image/*">
       </div>
 
-      <input type="text" id="messageInput" placeholder="Écris un message...">
-      <button onclick="sendMessage()">Envoyer</button>
-
-      <!-- Input pour envoyer des images -->
-      <input type="file" id="imageInput" accept="image/*">
-
-      <!-- Conteneur pour le bouton de retour au canal général, uniquement visible en mode privé -->
+      <!-- Conteneur pour le bouton de retour au canal général -->
       <div id="privateChatControls" style="display: none;">
         <button onclick="switchToGeneral()">Retour au canal général</button>
       </div>
