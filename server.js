@@ -8,6 +8,7 @@ const server = http.createServer(app);
 const io = socketio(server);
 
 let users = {}; // Objet pour stocker les utilisateurs connectés
+let messageHistory = []; // Tableau pour stocker l'historique des messages
 
 // Sert les fichiers statiques du dossier 'public'
 app.use(express.static(path.join(__dirname, 'public')));
@@ -24,18 +25,35 @@ io.on('connection', (socket) => {
   socket.on('setUsername', (username) => {
     users[socket.id] = username;
     io.emit('userList', Object.values(users)); // Envoie la liste des utilisateurs à tous
+
+    // Envoie l'historique des messages au nouvel utilisateur
+    messageHistory
+      .filter(msg => msg.to === "general") // Filtre pour les messages du canal général
+      .forEach(msg => {
+        socket.emit('message', msg); // Envoie chaque message du canal général
+      });
   });
 
   // Quand un message est envoyé
   socket.on('message', ({ to, msg }) => {
+    const from = users[socket.id];
+    const messageData = { from, to, msg };
+
+    // Enregistre le message dans l'historique
+    messageHistory.push(messageData);
+
+    // Limite l'historique à 100 messages
+    if (messageHistory.length > 100) {
+      messageHistory.shift(); // Supprime le message le plus ancien
+    }
+
+    // Diffusion du message
     if (to === "general") {
-      // Diffuse dans le canal général
-      io.emit('message', { from: users[socket.id], to: "general", msg });
+      io.emit('message', messageData);
     } else {
-      // Envoie un message privé
       const userSocket = Object.keys(users).find(key => users[key] === to);
       if (userSocket) {
-        io.to(userSocket).emit('message', { from: users[socket.id], to, msg });
+        io.to(userSocket).emit('message', messageData);
       }
     }
   });
