@@ -45,3 +45,14 @@ button {
   background-color: #cce5ff;
   font-weight: bold;
 }
+
+/* ✅ Nouveau style : zone de message avec image de fond */
+#messageArea {
+  background-image: url('https://i.pinimg.com/originals/e2/a5/20/e2a5200ca81ee9359add0cba9cafd758.jpg');
+  background-size: cover;
+  background-position: center;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
