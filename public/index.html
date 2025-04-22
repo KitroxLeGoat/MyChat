@@ -5,6 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Chat entre amis</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    #emoji-picker {
+      margin-top: 10px;
+      font-size: 24px;
+      user-select: none;
+    }
+    #emoji-picker span {
+      cursor: pointer;
+      padding: 5px;
+      margin: 2px;
+      border-radius: 5px;
+      transition: background 0.2s;
+    }
+    #emoji-picker span:hover {
+      background: #eee;
+    }
+  </style>
 </head>
 <body>
   <!-- Section de connexion -->
@@ -23,7 +40,14 @@
     <div id="chatWindow">
       <h3 id="channelTitle">Canal Général</h3>
       <div id="messages"></div>
-      <div id="typingIndicator" style="font-style: italic; height: 20px;"></div> <!-- Indicateur de frappe -->
+      <div id="typingIndicator" style="font-style: italic; height: 20px;"></div>
+
+      <!-- ✅ Émojis -->
+      <div id="emoji-picker">
+        <span>😀</span><span>😂</span><span>😍</span><span>😎</span><span>😭</span>
+        <span>😡</span><span>👍</span><span>🙏</span><span>💀</span><span>🎉</span><span>❤️</span>
+      </div>
+
       <input type="text" id="messageInput" placeholder="Écris un message...">
       <button onclick="sendMessage()">Envoyer</button>
 
@@ -39,5 +63,18 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="client.js"></script>
+
+  <!-- ✅ Script pour gérer les clics sur les émojis -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('#emoji-picker span').forEach(emoji => {
+        emoji.addEventListener('click', () => {
+          const input = document.getElementById('messageInput');
+          input.value += emoji.textContent;
+          input.focus();
+        });
+      });
+    });
+  </script>
 </body>
 </html>
