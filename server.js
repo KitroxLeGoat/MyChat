@@ -40,6 +40,18 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ✅ Gestion des images
+  socket.on('image', ({ to, image }) => {
+    if (to === "general") {
+      io.emit('image', { from: users[socket.id], to: "general", image });
+    } else {
+      const userSocket = Object.keys(users).find(key => users[key] === to);
+      if (userSocket) {
+        io.to(userSocket).emit('image', { from: users[socket.id], to, image });
+      }
+    }
+  });
+
   // Indicateur "en train d'écrire"
   socket.on('typing', (to) => {
     if (!users[socket.id]) return; // Ignore si l'utilisateur n'est pas défini

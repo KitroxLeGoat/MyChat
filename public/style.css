@@ -18,6 +18,17 @@
   padding: 10px;
 }
 
+/* ✅ Nouveau style : zone de message avec image de fond */
+#messageArea {
+  background-image: url('https://i.pinimg.com/originals/e2/a5/20/e2a5200ca81ee9359add0cba9cafd758.jpg');
+  background-size: cover;
+  background-position: center;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
 #messages {
   border: 1px solid #ccc;
   height: 300px;
@@ -46,13 +57,20 @@ button {
   font-weight: bold;
 }
 
-/* ✅ Nouveau style : zone de message avec image de fond */
-#messageArea {
-  background-image: url('https://i.pinimg.com/originals/e2/a5/20/e2a5200ca81ee9359add0cba9cafd758.jpg');
-  background-size: cover;
-  background-position: center;
-  padding: 15px;
+/* ✅ Style pour les messages (texte et image) */
+.message {
+  margin-bottom: 10px;
+  background: #f0f0f0;
+  padding: 8px 12px;
   border-radius: 10px;
-  margin-top: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+/* ✅ Style pour les images dans les messages */
+.chat-image {
+  max-width: 200px;
+  border-radius: 10px;
+  display: block;
+  margin-top: 5px;
 }

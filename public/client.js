@@ -37,6 +37,16 @@ function setUsername() {
       div.scrollTop = div.scrollHeight;
     });
 
+    // Affichage des images
+    socket.on("image", ({ from, to, image }) => {
+      const div = document.getElementById("messages");
+      const img = document.createElement("img");
+      img.src = image;
+      img.classList.add("chat-image");
+      div.appendChild(img);
+      div.scrollTop = div.scrollHeight;
+    });
+
     // Indicateur de frappe
     socket.on('typing', (username) => {
       const typingIndicator = document.getElementById('typingIndicator');
@@ -79,9 +89,9 @@ function sendImage() {
   if (file) {
     const reader = new FileReader();
     reader.onloadend = function() {
-      socket.emit('message', {
+      socket.emit('image', {
         to: currentChannel,
-        msg: `<img src="${reader.result}" alt="image" width="200" />`
+        image: reader.result
       });
     };
     reader.readAsDataURL(file);
