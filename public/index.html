@@ -22,7 +22,6 @@
       background: #eee;
     }
 
-    /* 🎨 Nouveau style pour la zone de message */
     #messageArea {
       background-image: url('https://i.pinimg.com/originals/e2/a5/20/e2a5200ca81ee9359add0cba9cafd758.jpg');
       background-size: cover;
@@ -31,6 +30,21 @@
       border-radius: 10px;
       margin-top: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    /* Nouveau bouton changer pseudo */
+    #resetBtn {
+      margin-bottom: 10px;
+      padding: 6px 12px;
+      background-color: #ff5c5c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #resetBtn:hover {
+      background-color: #e04a4a;
     }
   </style>
 </head>
@@ -50,6 +64,10 @@
     </div>
     <div id="chatWindow">
       <h3 id="channelTitle">Canal Général</h3>
+
+      <!-- ✅ Bouton de réinitialisation -->
+      <button id="resetBtn" onclick="resetUsername()">Changer de pseudo</button>
+
       <div id="messages"></div>
       <div id="typingIndicator" style="font-style: italic; height: 20px;"></div>
 
@@ -63,11 +81,10 @@
         <input type="text" id="messageInput" placeholder="Écris un message...">
         <button onclick="sendMessage()">Envoyer</button>
 
-        <!-- Input pour envoyer des images -->
         <input type="file" id="imageInput" accept="image/*">
       </div>
 
-      <!-- Conteneur pour le bouton de retour au canal général -->
+      <!-- Bouton retour canal général -->
       <div id="privateChatControls" style="display: none;">
         <button onclick="switchToGeneral()">Retour au canal général</button>
       </div>
@@ -77,7 +94,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="client.js"></script>
 
-  <!-- ✅ Script pour gérer les clics sur les émojis -->
+  <!-- Gestion des clics emoji -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('#emoji-picker span').forEach(emoji => {
