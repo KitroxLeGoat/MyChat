@@ -5,29 +5,48 @@
 #chat {
   display: flex;
   flex-direction: row;
+  /* Applique l'image de fond au chat dans son ensemble */
+  background-image: url('https://th.bing.com/th/id/OIP.nuP5QZkWV03et_0nHVmiEAHaEK?rs=1&pid=ImgDetMain');
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
 }
 
 #sidebar {
   width: 200px;
-  background-color: #f4f4f4;
+  background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent pour la lisibilité */
   padding: 10px;
+  border-right: 1px solid #ccc;
 }
 
 #chatWindow {
   flex: 1;
   padding: 10px;
+  background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent pour la lisibilité */
+  height: 100%; /* Prendre toute la hauteur */
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 #messages {
-  border: 1px solid #ccc;
+  padding: 15px;
   height: 300px;
   overflow-y: scroll;
   margin-bottom: 10px;
+  background-color: rgba(255, 255, 255, 0.5); /* Fond semi-transparent pour les messages */
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
 
 input[type="text"] {
   width: 100%;
   padding: 5px;
+  /* Applique l'image de fond au champ de saisie */
+  background-image: url('https://i.pinimg.com/originals/e2/a5/20/e2a5200ca81ee9359add0cba9cafd758.jpg');
+  background-size: cover;
+  background-position: center;
+  color: #fff; /* Assure que le texte est visible */
+  border-radius: 5px;
 }
 
 button {
@@ -44,15 +63,4 @@ button {
 #usersList li.active {
   background-color: #cce5ff;
   font-weight: bold;
-}
-
-/* ✅ Nouveau style : zone de message avec image de fond */
-#messageArea {
-  background-image: url('https://i.pinimg.com/originals/e2/a5/20/e2a5200ca81ee9359add0cba9cafd758.jpg');
-  background-size: cover;
-  background-position: center;
-  padding: 15px;
-  border-radius: 10px;
-  margin-top: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
 }
