@@ -11,7 +11,6 @@ function setUsername() {
   username = input.value.trim();
 
   if (username) {
-    // Lire le fichier d'avatar s'il existe
     const file = fileInput.files[0];
     if (file) {
       const reader = new FileReader();
@@ -22,7 +21,6 @@ function setUsername() {
       };
       reader.readAsDataURL(file);
     } else {
-      // Avatar déjà en mémoire ou vide
       avatar = localStorage.getItem("avatar") || "";
       saveUserData();
       connectSocket();
@@ -51,7 +49,7 @@ function setupSocketListeners() {
     users.forEach(user => {
       if (user.username !== username) {
         const li = document.createElement("li");
-        li.innerHTML = `<img src="${user.avatar}" alt="" style="width:24px; height:24px; border-radius:50%; vertical-align:middle; margin-right:6px;">${user.username}`;
+        li.innerHTML = `<img src="${user.avatar}" style="width:24px; height:24px; border-radius:50%; vertical-align:middle; margin-right:6px;">${user.username}`;
         li.onclick = () => switchToPrivate(user.username);
         ul.appendChild(li);
       }
@@ -94,20 +92,6 @@ function sendMessage() {
   }
 }
 
-function switchToPrivate(user) {
-  currentChannel = user;
-  document.getElementById("channelTitle").textContent = `Chat privé avec ${user}`;
-  document.getElementById("messages").innerHTML = "";
-  document.getElementById("privateChatControls").style.display = 'block';
-}
-
-function switchToGeneral() {
-  currentChannel = "general";
-  document.getElementById("channelTitle").textContent = "Canal Général";
-  document.getElementById("messages").innerHTML = "";
-  document.getElementById("privateChatControls").style.display = 'none';
-}
-
 function sendImage() {
   const input = document.getElementById("imageInput");
   const file = input.files[0];
@@ -125,14 +109,44 @@ function sendImage() {
 }
 
 function resetUsername() {
-  localStorage.removeItem("username");
-  localStorage.removeItem("avatar");
-  location.reload();
+  document.getElementById("login").classList.remove("hidden");
+  document.getElementById("chat").classList.add("hidden");
+
+  // Cacher les champs inutiles
+  document.getElementById("avatarInput").style.display = "none";
+  document.querySelector("label[for='avatarInput']").style.display = "none";
+  document.getElementById("avatarPreview").style.display = "none";
 }
 
-document.getElementById('imageInput').addEventListener('change', sendImage);
+function changeAvatar() {
+  document.getElementById("login").classList.remove("hidden");
+  document.getElementById("chat").classList.add("hidden");
 
-// ✅ Auto-login si pseudo + avatar déjà enregistrés
+  // Cacher pseudo, afficher avatar
+  document.getElementById("usernameInput").style.display = "none";
+  document.querySelector("h2").textContent = "Choisis une nouvelle photo";
+  document.getElementById("avatarInput").style.display = "block";
+  document.getElementById("avatarInput").click();
+}
+
+function switchToPrivate(user) {
+  currentChannel = user;
+  document.getElementById("channelTitle").textContent = `Chat privé avec ${user}`;
+  document.getElementById("messages").innerHTML = "";
+  document.getElementById("privateChatControls").style.display = 'block';
+}
+
+function switchToGeneral() {
+  currentChannel = "general";
+  document.getElementById("channelTitle").textContent = "Canal Général";
+  document.getElementById("messages").innerHTML = "";
+  document.getElementById("privateChatControls").style.display = 'none';
+}
+
+// EVENTS
+document.getElementById("imageInput").addEventListener("change", sendImage);
+document.getElementById("changeAvatarBtn").addEventListener("click", changeAvatar);
+
 window.addEventListener("DOMContentLoaded", () => {
   const saved = localStorage.getItem("username");
   const savedAvatar = localStorage.getItem("avatar");
@@ -140,7 +154,6 @@ window.addEventListener("DOMContentLoaded", () => {
   if (saved) {
     username = saved;
     avatar = savedAvatar || "";
-
     connectSocket();
   }
 });
