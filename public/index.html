@@ -190,6 +190,46 @@
       document.getElementById('usernameField').style.display = mode === 'username' ? 'block' : 'none';
       document.getElementById('avatarField').style.display = mode === 'avatar' ? 'block' : 'none';
     }
+
+    // Connexion au serveur Socket.io
+    const socket = io();
+
+    // Fonction pour changer de pseudo et de photo
+    function setUsername() {
+      const username = document.getElementById('usernameInput').value.trim();
+      const avatarInput = document.getElementById('avatarInput');
+      let avatar = localStorage.getItem('avatar'); // Si l'avatar a déjà été défini, le récupérer
+
+      // Si un fichier est sélectionné pour l'avatar, le lire et le convertir en URL
+      if (avatarInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          avatar = reader.result; // Stocker l'avatar dans le localStorage
+          localStorage.setItem('avatar', avatar);
+          // Émettre l'événement pour le pseudo et l'avatar
+          socket.emit('setUsername', { username, avatar });
+          alert('Pseudo et photo de profil mis à jour');
+        };
+        reader.readAsDataURL(avatarInput.files[0]); // Lire l'avatar en tant que DataURL
+      } else {
+        // Si aucun avatar n'est sélectionné, juste envoyer le pseudo
+        socket.emit('setUsername', { username, avatar });
+        alert('Pseudo mis à jour');
+      }
+
+      // Cacher le formulaire après soumission
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('chat').classList.remove('hidden');
+    }
+
+    // Connexion au serveur pour recevoir le pseudo et l'avatar au moment de la connexion
+    socket.on('connect', () => {
+      const username = localStorage.getItem('username');
+      const avatar = localStorage.getItem('avatar') || 'https://bgbb.de/wp-content/uploads/2023/01/Angelina-Sequeira-Gerardo_sw-1008x1400.jpg'; // Avatar par défaut
+      if (username) {
+        socket.emit('setUsername', { username, avatar });
+      }
+    });
   </script>
 </body>
 </html>
