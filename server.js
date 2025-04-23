@@ -7,34 +7,40 @@ const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 
-// ✅ Utilisateurs avec pseudo + avatar
-let users = {}; // { socket.id: { username: "xxx", avatar: "data:image..." } }
+let users = {}; // { socket.id: { username, avatar } }
 
-// Fichiers statiques
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Page d'accueil
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 io.on('connection', (socket) => {
-  console.log('Un utilisateur est connecté');
+  console.log('✅ Un utilisateur est connecté');
 
-  // ✅ Réception du pseudo + avatar
   socket.on('setUsername', ({ username, avatar }) => {
+    if (!username || typeof username !== 'string' || username.trim() === '') {
+      return;
+    }
+
+    const nameTaken = Object.values(users).some(u => u.username === username);
+    if (nameTaken) {
+      socket.emit('usernameError', 'Ce pseudo est déjà pris');
+      return;
+    }
+
     users[socket.id] = { username, avatar };
+    socket.username = username;
     updateUserList();
   });
 
-  // ✅ Message texte
   socket.on('message', ({ to, msg, avatar }) => {
     const sender = users[socket.id];
     if (!sender) return;
 
     const payload = {
       from: sender.username,
-      avatar: avatar || sender.avatar,  // Utilisation de l'avatar envoyé ou celui de l'utilisateur
+      avatar: avatar || sender.avatar,
       to,
       msg
     };
@@ -49,14 +55,13 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ✅ Image
   socket.on('image', ({ to, image, avatar }) => {
     const sender = users[socket.id];
     if (!sender) return;
 
     const payload = {
       from: sender.username,
-      avatar: avatar || sender.avatar,  // Utilisation de l'avatar envoyé ou celui de l'utilisateur
+      avatar: avatar || sender.avatar,
       to,
       image
     };
@@ -71,7 +76,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ✅ "Typing"
   socket.on('typing', (to) => {
     const sender = users[socket.id];
     if (!sender) return;
@@ -86,20 +90,22 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ✅ Déconnexion
   socket.on('disconnect', () => {
+    console.log(`❌ ${users[socket.id]?.username || 'Un utilisateur'} déconnecté`);
     delete users[socket.id];
     updateUserList();
   });
 
-  // 🔁 Fonction pour mettre à jour la liste des utilisateurs
   function updateUserList() {
-    const userList = Object.values(users).map(u => ({ username: u.username, avatar: u.avatar }));
+    const userList = Object.values(users).map(u => ({
+      username: u.username,
+      avatar: u.avatar
+    }));
     io.emit('userList', userList);
   }
 });
 
 const port = process.env.PORT || 3000;
 server.listen(port, () => {
-  console.log(`Serveur en ligne sur http://localhost:${port}`);
+  console.log(`🚀 Serveur en ligne sur http://localhost:${port}`);
 });

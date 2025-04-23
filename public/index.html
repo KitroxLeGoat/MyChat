@@ -59,7 +59,6 @@
       margin-top: 10px;
     }
 
-    /* Style pour le bouton ⚙️ en haut à droite */
     #settingsBtn {
       position: fixed;
       top: 20px;
@@ -94,6 +93,10 @@
 
     #settingsMenu button {
       margin: 5px 0;
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
@@ -154,9 +157,10 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="client.js"></script>
-
   <script>
+    const socket = io();
+    let currentChannel = "general";
+
     document.addEventListener('DOMContentLoaded', () => {
       const settingsBtn = document.getElementById('settingsBtn');
       const settingsMenu = document.getElementById('settingsMenu');
@@ -165,7 +169,6 @@
         settingsMenu.classList.toggle('show');
       });
 
-      // Insertion emoji
       document.querySelectorAll('#emoji-picker span').forEach(emoji => {
         emoji.addEventListener('click', () => {
           const input = document.getElementById('messageInput');
@@ -174,7 +177,6 @@
         });
       });
 
-      // Touche entrée pour envoyer message
       const msgInput = document.getElementById('messageInput');
       msgInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -191,44 +193,59 @@
       document.getElementById('avatarField').style.display = mode === 'avatar' ? 'block' : 'none';
     }
 
-    // Connexion au serveur Socket.io
-    const socket = io();
-
-    // Fonction pour changer de pseudo et de photo
     function setUsername() {
       const username = document.getElementById('usernameInput').value.trim();
       const avatarInput = document.getElementById('avatarInput');
-      let avatar = localStorage.getItem('avatar'); // Si l'avatar a déjà été défini, le récupérer
 
-      // Si un fichier est sélectionné pour l'avatar, le lire et le convertir en URL
+      if (!username) {
+        alert("Merci d'entrer un pseudo !");
+        return;
+      }
+
+      localStorage.setItem('username', username);
+      let avatar = localStorage.getItem('avatar');
+
       if (avatarInput.files.length > 0) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          avatar = reader.result; // Stocker l'avatar dans le localStorage
+          avatar = reader.result;
           localStorage.setItem('avatar', avatar);
-          // Émettre l'événement pour le pseudo et l'avatar
           socket.emit('setUsername', { username, avatar });
-          alert('Pseudo et photo de profil mis à jour');
+          document.getElementById('login').style.display = 'none';
+          document.getElementById('chat').classList.remove('hidden');
         };
-        reader.readAsDataURL(avatarInput.files[0]); // Lire l'avatar en tant que DataURL
+        reader.readAsDataURL(avatarInput.files[0]);
       } else {
-        // Si aucun avatar n'est sélectionné, juste envoyer le pseudo
         socket.emit('setUsername', { username, avatar });
-        alert('Pseudo mis à jour');
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('chat').classList.remove('hidden');
       }
-
-      // Cacher le formulaire après soumission
-      document.getElementById('login').style.display = 'none';
-      document.getElementById('chat').classList.remove('hidden');
     }
 
-    // Connexion au serveur pour recevoir le pseudo et l'avatar au moment de la connexion
     socket.on('connect', () => {
       const username = localStorage.getItem('username');
-      const avatar = localStorage.getItem('avatar') || 'https://bgbb.de/wp-content/uploads/2023/01/Angelina-Sequeira-Gerardo_sw-1008x1400.jpg'; // Avatar par défaut
+      const avatar = localStorage.getItem('avatar') || 'https://bgbb.de/wp-content/uploads/2023/01/Angelina-Sequeira-Gerardo_sw-1008x1400.jpg';
       if (username) {
         socket.emit('setUsername', { username, avatar });
       }
+    });
+
+    // 🔄 MAJ Liste des utilisateurs connectés
+    socket.on('userList', (list) => {
+      const usersList = document.getElementById('usersList');
+      usersList.innerHTML = '';
+      list.forEach(({ username, avatar }) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<img src="${avatar}" width="30" style="border-radius:50%; vertical-align:middle; margin-right:8px;">${username}`;
+        usersList.appendChild(li);
+      });
+    });
+
+    // 🚫 Erreur pseudo déjà pris
+    socket.on('usernameError', (msg) => {
+      alert(msg);
+      document.getElementById('login').style.display = 'block';
+      document.getElementById('chat').classList.add('hidden');
     });
   </script>
 </body>
