@@ -1,50 +1,105 @@
 const express = require('express');
 const http = require('http');
-const socketIo = require('socket.io');
+const socketio = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketio(server);
 
-let users = []; // Liste des utilisateurs connectés
+// ✅ Utilisateurs avec pseudo + avatar
+let users = {}; // { socket.id: { username: "xxx", avatar: "data:image..." } }
 
-// Gérer les connexions WebSocket
+// Fichiers statiques
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Page d'accueil
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 io.on('connection', (socket) => {
   console.log('Un utilisateur est connecté');
 
-  // Enregistrer le pseudo
-  socket.on('setUsername', (username) => {
-    socket.username = username;
-    users.push(username);
-    io.emit('updateUsers', users); // Mettre à jour la liste des utilisateurs
+  // ✅ Réception du pseudo + avatar
+  socket.on('setUsername', ({ username, avatar }) => {
+    users[socket.id] = { username, avatar };
+    updateUserList();
   });
 
-  // Gérer l'envoi de messages
-  socket.on('sendMessage', (message) => {
-    if (message.channel === 'public') {
-      io.emit('message', { type: 'received', text: message.text });
-    } else if (message.channel === 'private') {
-      // Envoyer uniquement au destinataire du message privé
-      io.to(message.recipient).emit('message', { type: 'received', text: message.text });
+  // ✅ Message texte
+  socket.on('message', ({ to, msg, avatar }) => {
+    const sender = users[socket.id];
+    if (!sender) return;
+
+    const payload = {
+      from: sender.username,
+      avatar: avatar || sender.avatar,  // Utilisation de l'avatar envoyé ou celui de l'utilisateur
+      to,
+      msg
+    };
+
+    if (to === "general") {
+      io.emit('message', payload);
+    } else {
+      const recipientSocket = Object.keys(users).find(id => users[id].username === to);
+      if (recipientSocket) {
+        io.to(recipientSocket).emit('message', payload);
+      }
     }
   });
 
-  // Déconnexion d'un utilisateur
-  socket.on('logout', () => {
-    users = users.filter(user => user !== socket.username);
-    io.emit('updateUsers', users);
-    socket.disconnect();
+  // ✅ Image
+  socket.on('image', ({ to, image, avatar }) => {
+    const sender = users[socket.id];
+    if (!sender) return;
+
+    const payload = {
+      from: sender.username,
+      avatar: avatar || sender.avatar,  // Utilisation de l'avatar envoyé ou celui de l'utilisateur
+      to,
+      image
+    };
+
+    if (to === "general") {
+      io.emit('image', payload);
+    } else {
+      const recipientSocket = Object.keys(users).find(id => users[id].username === to);
+      if (recipientSocket) {
+        io.to(recipientSocket).emit('image', payload);
+      }
+    }
   });
 
-  // Déconnexion d'un utilisateur
+  // ✅ "Typing"
+  socket.on('typing', (to) => {
+    const sender = users[socket.id];
+    if (!sender) return;
+
+    if (to === "general") {
+      socket.broadcast.emit("typing", sender.username);
+    } else {
+      const recipientSocket = Object.keys(users).find(id => users[id].username === to);
+      if (recipientSocket) {
+        io.to(recipientSocket).emit("typing", sender.username);
+      }
+    }
+  });
+
+  // ✅ Déconnexion
   socket.on('disconnect', () => {
-    if (socket.username) {
-      users = users.filter(user => user !== socket.username);
-      io.emit('updateUsers', users);
-    }
+    delete users[socket.id];
+    updateUserList();
   });
+
+  // 🔁 Fonction pour mettre à jour la liste des utilisateurs
+  function updateUserList() {
+    const userList = Object.values(users).map(u => ({ username: u.username, avatar: u.avatar }));
+    io.emit('userList', userList);
+  }
 });
 
-server.listen(3000, () => {
-  console.log('Serveur démarré sur http://localhost:3000');
+const port = process.env.PORT || 3000;
+server.listen(port, () => {
+  console.log(`Serveur en ligne sur http://localhost:${port}`);
 });

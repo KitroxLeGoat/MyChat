@@ -3,49 +3,167 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chat WhatsApp</title>
+  <title>MyChat</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    #emoji-picker {
+      margin-top: 10px;
+      font-size: 24px;
+      user-select: none;
+    }
+    #emoji-picker span {
+      cursor: pointer;
+      padding: 5px;
+      margin: 2px;
+      border-radius: 5px;
+      transition: background 0.2s;
+    }
+    #emoji-picker span:hover {
+      background: #eee;
+    }
+
+    #messageArea {
+      background-image: url('https://i.pinimg.com/originals/e2/a5/20/e2a5200ca81ee9359add0cba9cafd758.jpg');
+      background-size: cover;
+      background-position: center;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    #resetBtn {
+      margin-bottom: 10px;
+      padding: 6px 12px;
+      background-color: #ff5c5c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #resetBtn:hover {
+      background-color: #e04a4a;
+    }
+
+    #avatarPreview {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin: 10px 0;
+      object-fit: cover;
+      display: none;
+    }
+
+    input[type="file"] {
+      margin-top: 10px;
+    }
+
+    /* Nouveau style pour les images de profil */
+    .profile-img {
+      width: 40px; /* Taille plus grande */
+      height: 40px; /* Taille plus grande */
+      border-radius: 50%; /* Forme ronde */
+      object-fit: cover; /* Assure que l'image est bien ajustée */
+      margin-right: 10px; /* Un peu d'espace entre l'image et le texte */
+    }
+
+    /* Style pour les messages */
+    .message {
+      margin-bottom: 10px;
+      background: #f0f0f0;
+      padding: 8px 12px;
+      border-radius: 10px;
+      max-width: 70%;
+      word-wrap: break-word;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Style pour les images dans les messages */
+    .chat-image {
+      max-width: 200px;
+      border-radius: 10px;
+      display: block;
+      margin-top: 5px;
+    }
+  </style>
 </head>
 <body>
-  <!-- Barre latérale (contacts et paramètres) -->
-  <div id="sidebar">
-    <div id="profile">
-      <img id="profileImage" src="https://www.whatsapp.com/img/favicon/256.png" alt="Profil">
-      <h2 id="username">Nom d'utilisateur</h2>
-    </div>
-    <ul id="usersList">
-      <!-- Liste des utilisateurs connectés -->
-    </ul>
-    <button onclick="logout()">Se déconnecter</button>
+  <!-- Section de connexion -->
+  <div id="login">
+    <h2>Choisis un pseudo</h2>
+    <input type="text" id="usernameInput" placeholder="Ton pseudo"><br><br>
+
+    <label>Photo de profil :</label><br>
+    <input type="file" id="avatarInput" accept="image/*"><br>
+    <img id="avatarPreview"><br>
+
+    <button onclick="setUsername()">Entrer</button>
   </div>
 
-  <!-- Fenêtre de chat -->
-  <div id="chatWindow">
-    <header>
+  <!-- Section de chat (affichée une fois le pseudo choisi) -->
+  <div id="chat" class="hidden">
+    <div id="sidebar">
+      <h3>Utilisateurs</h3>
+      <ul id="usersList"></ul>
+    </div>
+    <div id="chatWindow">
       <h3 id="channelTitle">Canal Général</h3>
-    </header>
 
-    <div id="messages">
-      <!-- Messages s'affichent ici -->
-    </div>
+      <!-- Boutons profil -->
+      <button id="resetBtn" onclick="resetUsername()">Changer de pseudo</button>
+      <button onclick="changeAvatar()">Changer la photo</button>
 
-    <div id="inputArea">
-      <input type="text" id="messageInput" placeholder="Écris un message..." />
-      <button onclick="sendMessage()">Envoyer</button>
-      <input type="file" id="imageInput" accept="image/*" />
-    </div>
+      <div id="messages"></div>
+      <div id="typingIndicator" style="font-style: italic; height: 20px;"></div>
 
-    <!-- Liste des contacts et possibilité de commencer un chat privé -->
-    <div id="privateChatControls" style="display: none;">
-      <button onclick="switchToGeneral()">Retour au canal général</button>
-      <select id="privateChatSelect">
-        <option value="">Choisir un utilisateur</option>
-      </select>
-      <button onclick="startPrivateChat()">Démarrer un chat privé</button>
+      <div id="messageArea">
+        <div id="emoji-picker">
+          <span>😀</span><span>😂</span><span>😍</span><span>😎</span><span>😭</span>
+          <span>😡</span><span>👍</span><span>🙏</span><span>💀</span><span>🎉</span><span>❤️</span>
+        </div>
+
+        <input type="text" id="messageInput" placeholder="Écris un message...">
+        <button onclick="sendMessage()">Envoyer</button>
+
+        <input type="file" id="imageInput" accept="image/*">
+      </div>
+
+      <div id="privateChatControls" style="display: none;">
+        <button onclick="switchToGeneral()">Retour au canal général</button>
+      </div>
     </div>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script src="client.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('#emoji-picker span').forEach(emoji => {
+        emoji.addEventListener('click', () => {
+          const input = document.getElementById('messageInput');
+          input.value += emoji.textContent;
+          input.focus();
+        });
+      });
+
+      const avatarInput = document.getElementById('avatarInput');
+      const avatarPreview = document.getElementById('avatarPreview');
+
+      avatarInput.addEventListener('change', () => {
+        const file = avatarInput.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            avatarPreview.src = reader.result;
+            avatarPreview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    });
+  </script>
 </body>
 </html>

@@ -1,31 +1,53 @@
-/* Mise en page générale */
+/* Style de base pour l'application */
 body {
   font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
   display: flex;
+  justify-content: center;
+  align-items: center;
   height: 100vh;
-  margin: 0;
+  background-color: #f4f4f4;
 }
 
-/* Barre latérale */
-#sidebar {
+#login, #chat {
   width: 300px;
-  background-color: #075e54;
-  color: white;
   padding: 20px;
-  display: flex;
-  flex-direction: column;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
-#profile img {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  margin-bottom: 10px;
+input[type="text"], input[type="file"] {
+  width: 80%;
+  padding: 8px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
-#profile h2 {
-  margin: 0;
-  font-size: 20px;
+button {
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.hidden {
+  display: none;
+}
+
+#messages {
+  height: 300px;
+  overflow-y: scroll;
+  margin-bottom: 20px;
 }
 
 #usersList {
@@ -34,87 +56,5 @@ body {
 }
 
 #usersList li {
-  margin: 10px 0;
-  font-size: 16px;
-}
-
-button {
-  background-color: #25d366;
-  border: none;
-  color: white;
-  padding: 10px;
-  cursor: pointer;
-  border-radius: 5px;
-  margin-top: 20px;
-}
-
-button:hover {
-  background-color: #128c7e;
-}
-
-/* Fenêtre de chat */
-#chatWindow {
-  flex-grow: 1;
-  background-color: #e5ddd5;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-header {
-  background-color: #128c7e;
-  color: white;
-  padding: 10px;
-  text-align: center;
-}
-
-#messages {
-  flex-grow: 1;
-  margin-top: 20px;
-  overflow-y: auto;
-  padding-right: 10px;
-}
-
-#messageInput {
-  width: calc(100% - 100px);
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  margin-right: 10px;
-}
-
-#inputArea {
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-}
-
-#imageInput {
-  margin-left: 10px;
-}
-
-#privateChatControls {
-  display: none;
-  margin-top: 20px;
-}
-
-#privateChatSelect {
-  margin-right: 10px;
-}
-
-.message {
-  background-color: #fff;
-  padding: 10px;
-  border-radius: 10px;
-  margin: 5px 0;
-  max-width: 70%;
-}
-
-.message.sent {
-  background-color: #dcf8c6;
-  align-self: flex-end;
-}
-
-.message.received {
-  background-color: #fff;
+  padding: 5px 0;
 }
