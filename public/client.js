@@ -130,6 +130,29 @@ function resetUsername() {
   location.reload();
 }
 
+// Fonction pour changer la photo de profil indépendamment
+function changeAvatar() {
+  const avatarInput = document.getElementById("avatarInput");
+  const avatarPreview = document.getElementById("avatarPreview");
+
+  avatarInput.click(); // Ouvre le champ de sélection de fichier pour l'avatar
+
+  avatarInput.addEventListener('change', () => {
+    const file = avatarInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        avatar = reader.result;
+        saveUserData();
+        document.getElementById("avatarPreview").src = avatar;
+        document.getElementById("avatarPreview").style.display = "block";
+        socket.emit("setUsername", { username, avatar });
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
 document.getElementById('imageInput').addEventListener('change', sendImage);
 
 // ✅ Auto-login si pseudo + avatar déjà enregistrés
@@ -144,3 +167,7 @@ window.addEventListener("DOMContentLoaded", () => {
     connectSocket();
   }
 });
+
+// Ajout d'un événement pour le changement d'avatar indépendamment
+document.getElementById('changeAvatarBtn').addEventListener('click', changeAvatar);
+
