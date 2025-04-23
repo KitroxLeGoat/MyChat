@@ -88,7 +88,7 @@ function sendMessage() {
   const input = document.getElementById("messageInput");
   const msg = input.value;
   if (msg.trim()) {
-    socket.emit("message", { to: currentChannel, msg });
+    socket.emit("message", { to: currentChannel, msg, avatar });
     input.value = "";
     socket.emit("typing", currentChannel);
   }
@@ -116,7 +116,8 @@ function sendImage() {
     reader.onloadend = function () {
       socket.emit('image', {
         to: currentChannel,
-        image: reader.result
+        image: reader.result,
+        avatar
       });
     };
     reader.readAsDataURL(file);

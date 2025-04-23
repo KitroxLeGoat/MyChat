@@ -28,13 +28,13 @@ io.on('connection', (socket) => {
   });
 
   // ✅ Message texte
-  socket.on('message', ({ to, msg }) => {
+  socket.on('message', ({ to, msg, avatar }) => {
     const sender = users[socket.id];
     if (!sender) return;
 
     const payload = {
       from: sender.username,
-      avatar: sender.avatar,
+      avatar: avatar || sender.avatar,  // Utilisation de l'avatar envoyé ou celui de l'utilisateur
       to,
       msg
     };
@@ -50,13 +50,13 @@ io.on('connection', (socket) => {
   });
 
   // ✅ Image
-  socket.on('image', ({ to, image }) => {
+  socket.on('image', ({ to, image, avatar }) => {
     const sender = users[socket.id];
     if (!sender) return;
 
     const payload = {
       from: sender.username,
-      avatar: sender.avatar,
+      avatar: avatar || sender.avatar,  // Utilisation de l'avatar envoyé ou celui de l'utilisateur
       to,
       image
     };
