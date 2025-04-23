@@ -1,173 +1,62 @@
-let socket;
-let username = "";
-let avatar = "";
-let currentChannel = "general";
-const typingTimeouts = {};
+const socket = io();
 
-function setUsername() {
-  const input = document.getElementById("usernameInput");
-  const fileInput = document.getElementById("avatarInput");
+let currentChannel = 'general';
+let username = null;
+let avatar = null;
 
-  username = input.value.trim();
-
+const setUsername = () => {
+  username = document.getElementById('usernameInput').value;
+  avatar = document.getElementById('avatarInput').files[0];
+  
   if (username) {
-    // Lire le fichier d'avatar s'il existe
-    const file = fileInput.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        avatar = reader.result;
-        saveUserData();
-        connectSocket();
-      };
-      reader.readAsDataURL(file);
-    } else {
-      // Avatar déjà en mémoire ou vide
-      avatar = localStorage.getItem("avatar") || "";
-      saveUserData();
-      connectSocket();
-    }
+    socket.emit('join', { username, avatar });
+    document.getElementById('login').classList.add('hidden');
+    document.getElementById('chat').classList.remove('hidden');
+    document.getElementById('channelTitle').textContent = `Canal ${currentChannel.charAt(0).toUpperCase() + currentChannel.slice(1)}`;
   }
-}
+};
 
-function saveUserData() {
-  localStorage.setItem("username", username);
-  localStorage.setItem("avatar", avatar);
-}
+const resetUsername = () => {
+  username = null;
+  avatar = null;
+  document.getElementById('usernameInput').value = '';
+  document.getElementById('avatarInput').value = '';
+  document.getElementById('login').classList.remove('hidden');
+  document.getElementById('chat').classList.add('hidden');
+};
 
-function connectSocket() {
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("chat").classList.remove("hidden");
-
-  socket = io();
-  socket.emit("setUsername", { username, avatar });
-  setupSocketListeners();
-}
-
-function setupSocketListeners() {
-  socket.on("userList", (users) => {
-    const ul = document.getElementById("usersList");
-    ul.innerHTML = "";
-    users.forEach(user => {
-      if (user.username !== username) {
-        const li = document.createElement("li");
-        li.innerHTML = `<img src="${user.avatar}" alt="" style="width:24px; height:24px; border-radius:50%; vertical-align:middle; margin-right:6px;">${user.username}`;
-        li.onclick = () => switchToPrivate(user.username);
-        ul.appendChild(li);
-      }
-    });
-  });
-
-  socket.on("message", ({ from, to, msg, avatar }) => {
-    const div = document.getElementById("messages");
-    const p = document.createElement("p");
-    p.innerHTML = `<img src="${avatar}" style="width:24px; height:24px; border-radius:50%; vertical-align:middle; margin-right:6px;"><strong>[${from}]</strong> ${msg}`;
-    div.appendChild(p);
-    div.scrollTop = div.scrollHeight;
-  });
-
-  socket.on("image", ({ from, to, image, avatar }) => {
-    const div = document.getElementById("messages");
-    const imgWrap = document.createElement("div");
-    imgWrap.innerHTML = `<p><img src="${avatar}" style="width:24px; height:24px; border-radius:50%; vertical-align:middle; margin-right:6px;"><strong>[${from}]</strong></p><img src="${image}" class="chat-image">`;
-    div.appendChild(imgWrap);
-    div.scrollTop = div.scrollHeight;
-  });
-
-  socket.on('typing', (user) => {
-    const typingIndicator = document.getElementById('typingIndicator');
-    typingIndicator.textContent = `${user} est en train d'écrire...`;
-    clearTimeout(typingTimeouts[user]);
-    typingTimeouts[user] = setTimeout(() => {
-      typingIndicator.textContent = '';
-    }, 3000);
-  });
-}
-
-function sendMessage() {
-  const input = document.getElementById("messageInput");
-  const msg = input.value;
-  if (msg.trim()) {
-    socket.emit("message", { to: currentChannel, msg, avatar });
-    input.value = "";
-    socket.emit("typing", currentChannel);
+const sendMessage = () => {
+  const message = document.getElementById('messageInput').value;
+  if (message) {
+    socket.emit('message', { message, channel: currentChannel });
+    document.getElementById('messageInput').value = '';
   }
-}
+};
 
-function switchToPrivate(user) {
-  currentChannel = user;
-  document.getElementById("channelTitle").textContent = `Chat privé avec ${user}`;
-  document.getElementById("messages").innerHTML = "";
-  document.getElementById("privateChatControls").style.display = 'block';
-}
-
-function switchToGeneral() {
-  currentChannel = "general";
-  document.getElementById("channelTitle").textContent = "Canal Général";
-  document.getElementById("messages").innerHTML = "";
-  document.getElementById("privateChatControls").style.display = 'none';
-}
-
-function sendImage() {
-  const input = document.getElementById("imageInput");
-  const file = input.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onloadend = function () {
-      socket.emit('image', {
-        to: currentChannel,
-        image: reader.result,
-        avatar
-      });
-    };
-    reader.readAsDataURL(file);
-  }
-}
-
-function resetUsername() {
-  localStorage.removeItem("username");
-  localStorage.removeItem("avatar");
-  location.reload();
-}
-
-// Fonction pour changer la photo de profil indépendamment
-function changeAvatar() {
-  const avatarInput = document.getElementById("avatarInput");
-  const avatarPreview = document.getElementById("avatarPreview");
-
-  avatarInput.click(); // Ouvre le champ de sélection de fichier pour l'avatar
-
-  avatarInput.addEventListener('change', () => {
-    const file = avatarInput.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        avatar = reader.result;
-        saveUserData();
-        document.getElementById("avatarPreview").src = avatar;
-        document.getElementById("avatarPreview").style.display = "block";
-        socket.emit("setUsername", { username, avatar });
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-}
-
-document.getElementById('imageInput').addEventListener('change', sendImage);
-
-// ✅ Auto-login si pseudo + avatar déjà enregistrés
-window.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("username");
-  const savedAvatar = localStorage.getItem("avatar");
-
-  if (saved) {
-    username = saved;
-    avatar = savedAvatar || "";
-
-    connectSocket();
-  }
+socket.on('message', (data) => {
+  const messageElement = document.createElement('div');
+  messageElement.textContent = `${data.username}: ${data.message}`;
+  document.getElementById('messages').appendChild(messageElement);
 });
 
-// Ajout d'un événement pour le changement d'avatar indépendamment
-document.getElementById('changeAvatarBtn').addEventListener('click', changeAvatar);
+socket.on('typing', (username) => {
+  const typingIndicator = document.getElementById('typingIndicator');
+  typingIndicator.textContent = `${username} est en train de taper...`;
+  setTimeout(() => typingIndicator.textContent = '', 2000);
+});
 
+socket.on('users', (users) => {
+  const usersList = document.getElementById('usersList');
+  usersList.innerHTML = '';
+  users.forEach(user => {
+    const userItem = document.createElement('li');
+    userItem.textContent = user.username;
+    usersList.appendChild(userItem);
+  });
+});
+
+const switchToGeneral = () => {
+  currentChannel = 'general';
+  document.getElementById('channelTitle').textContent = 'Canal Général';
+  document.getElementById('privateChatControls').style.display = 'none';
+};

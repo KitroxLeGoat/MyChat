@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Section de connexion -->
   <div id="login">
     <h2>Choisis un pseudo</h2>
     <input id="usernameInput" type="text" placeholder="Ton pseudo" />
@@ -18,7 +17,6 @@
     <button onclick="setUsername()">Entrer dans le chat</button>
   </div>
 
-  <!-- Section de chat -->
   <div id="chat" class="hidden">
     <header>
       <h1>Mini Chat</h1>
@@ -32,7 +30,7 @@
 
     <div id="channelTitle">Canal Général</div>
 
-    <div id="typingIndicator" style="font-style: italic; height: 20px;"></div>
+    <div id="typingIndicator"></div>
 
     <div id="messages"></div>
 
@@ -41,11 +39,6 @@
     </div>
 
     <div id="inputContainer">
-      <div id="emoji-picker">
-        <span>😀</span><span>😂</span><span>😍</span><span>😎</span><span>😭</span>
-        <span>😡</span><span>👍</span><span>🙏</span><span>💀</span><span>🎉</span><span>❤️</span>
-      </div>
-
       <input id="messageInput" type="text" placeholder="Tape un message..." oninput="socket.emit('typing', currentChannel)" />
       <button onclick="sendMessage()">Envoyer</button>
       <input type="file" id="imageInput" accept="image/*" />
@@ -57,34 +50,5 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="client.js"></script>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const settingsBtn = document.getElementById('settingsBtn');
-      const settingsMenu = document.getElementById('settingsMenu');
-      const emojiPicker = document.getElementById('emoji-picker');
-      const messageInput = document.getElementById('messageInput');
-
-      settingsBtn.addEventListener('click', () => {
-        settingsMenu.classList.toggle('show');
-      });
-
-      emojiPicker.querySelectorAll('span').forEach(emoji => {
-        emoji.addEventListener('click', () => {
-          messageInput.value += emoji.textContent;
-          messageInput.focus();
-        });
-      });
-
-      messageInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendMessage();
-        } else {
-          socket.emit('typing', currentChannel);
-        }
-      });
-    });
-  </script>
 </body>
 </html>
