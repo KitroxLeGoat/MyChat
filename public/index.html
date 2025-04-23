@@ -105,7 +105,7 @@
   <div id="login">
     <div style="display: flex; align-items: center; gap: 10px;">
       <h2 style="margin: 0;">Choisis un pseudo</h2>
-      <button id="settingsBtn">⚙️</button>
+      <button id="settingsBtn" style="display: inline-block;">⚙️</button>
     </div>
 
     <div id="settingsMenu">
@@ -247,6 +247,18 @@
       document.getElementById('login').style.display = 'block';
       document.getElementById('chat').classList.add('hidden');
     });
+
+    // Fonction d'envoi de message
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const msg = messageInput.value.trim();
+
+      if (msg) {
+        const to = currentChannel || "general"; // Envoie au canal actuel ou général
+        socket.emit('message', { to, msg, avatar: localStorage.getItem('avatar') });
+        messageInput.value = '';  // Vide le champ de saisie après envoi
+      }
+    }
   </script>
 </body>
 </html>
