@@ -6,86 +6,56 @@
   <title>MyChat</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    #emoji-picker {
-      margin-top: 10px;
-      font-size: 24px;
-      user-select: none;
-    }
-    #emoji-picker span {
-      cursor: pointer;
-      padding: 5px;
-      margin: 2px;
-      border-radius: 5px;
-      transition: background 0.2s;
-    }
-    #emoji-picker span:hover {
-      background: #eee;
-    }
+    /* Autres styles existants... */
 
-    #messageArea {
-      background-image: url('https://i.pinimg.com/originals/e2/a5/20/e2a5200ca81ee9359add0cba9cafd758.jpg');
-      background-size: cover;
-      background-position: center;
-      padding: 15px;
-      border-radius: 10px;
-      margin-top: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-
-    #resetBtn {
-      margin-bottom: 10px;
-      padding: 6px 12px;
-      background-color: #ff5c5c;
-      color: white;
+    /* Style pour le bouton ⚙️ (paramètres) */
+    #settingsBtn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background-color: #4CAF50; /* Couleur verte pour attirer l'attention */
       border: none;
+      cursor: pointer;
+      font-size: 30px;
+      color: white;
+      padding: 12px;
+      border-radius: 50%;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    #settingsBtn:hover {
+      background-color: #45a049; /* Couleur légèrement différente quand l'utilisateur survole */
+      transform: scale(1.1); /* Légère augmentation de taille pour l'effet visuel */
+    }
+
+    /* Style pour le menu déroulant */
+    #settingsMenu {
+      display: none;
+      background-color: #f4f4f4;
+      position: absolute;
+      top: 70px;
+      left: 20px;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+      width: 160px;
+    }
+
+    #settingsMenu button {
+      display: block;
+      margin: 10px 0;
+      padding: 8px;
+      width: 100%;
+      text-align: left;
+      background: #fff;
+      border: 1px solid #ddd;
       border-radius: 6px;
       cursor: pointer;
     }
 
-    #resetBtn:hover {
-      background-color: #e04a4a;
-    }
-
-    #avatarPreview {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      margin: 10px 0;
-      object-fit: cover;
-      display: none;
-    }
-
-    input[type="file"] {
-      margin-top: 10px;
-    }
-
-    /* Nouveau style pour les images de profil */
-    .profile-img {
-      width: 40px; /* Taille plus grande */
-      height: 40px; /* Taille plus grande */
-      border-radius: 50%; /* Forme ronde */
-      object-fit: cover; /* Assure que l'image est bien ajustée */
-      margin-right: 10px; /* Un peu d'espace entre l'image et le texte */
-    }
-
-    /* Style pour les messages */
-    .message {
-      margin-bottom: 10px;
-      background: #f0f0f0;
-      padding: 8px 12px;
-      border-radius: 10px;
-      max-width: 70%;
-      word-wrap: break-word;
-      display: flex;
-      align-items: center;
-    }
-
-    /* Style pour les images dans les messages */
-    .chat-image {
-      max-width: 200px;
-      border-radius: 10px;
-      display: block;
-      margin-top: 5px;
+    #settingsMenu button:hover {
+      background-color: #f0f0f0;
     }
   </style>
 </head>
@@ -111,9 +81,14 @@
     <div id="chatWindow">
       <h3 id="channelTitle">Canal Général</h3>
 
-      <!-- Boutons profil -->
-      <button id="resetBtn" onclick="resetUsername()">Changer de pseudo</button>
-      <button onclick="changeAvatar()">Changer la photo</button>
+      <!-- Bouton ⚙️ pour ouvrir le menu des paramètres -->
+      <button id="settingsBtn">⚙️</button>
+
+      <!-- Menu déroulant des paramètres -->
+      <div id="settingsMenu">
+        <button id="resetBtn" onclick="resetUsername()">Changer de pseudo</button>
+        <button onclick="changeAvatar()">Changer la photo</button>
+      </div>
 
       <div id="messages"></div>
       <div id="typingIndicator" style="font-style: italic; height: 20px;"></div>
@@ -140,15 +115,56 @@
   <script src="client.js"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('#emoji-picker span').forEach(emoji => {
-        emoji.addEventListener('click', () => {
-          const input = document.getElementById('messageInput');
-          input.value += emoji.textContent;
-          input.focus();
-        });
-      });
+    // Fonction pour ouvrir et fermer le menu des paramètres
+    document.getElementById("settingsBtn").addEventListener("click", () => {
+      const menu = document.getElementById("settingsMenu");
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    });
 
+    // Fonction pour modifier le pseudo
+    function setUsername() {
+      const input = document.getElementById("usernameInput");
+      const fileInput = document.getElementById("avatarInput");
+
+      username = input.value.trim();
+
+      if (username) {
+        // Lire le fichier d'avatar s'il existe
+        const file = fileInput.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            avatar = reader.result;
+            saveUserData();
+            connectSocket();
+          };
+          reader.readAsDataURL(file);
+        } else {
+          avatar = localStorage.getItem("avatar") || "";
+          saveUserData();
+          connectSocket();
+        }
+      }
+    }
+
+    // Fonction pour sauvegarder les données de l'utilisateur
+    function saveUserData() {
+      localStorage.setItem("username", username);
+      localStorage.setItem("avatar", avatar);
+    }
+
+    // Fonction pour ouvrir la connexion au socket
+    function connectSocket() {
+      document.getElementById("login").classList.add("hidden");
+      document.getElementById("chat").classList.remove("hidden");
+
+      socket = io();
+      socket.emit("setUsername", { username, avatar });
+      setupSocketListeners();
+    }
+
+    // Fonction pour changer l'avatar
+    function changeAvatar() {
       const avatarInput = document.getElementById('avatarInput');
       const avatarPreview = document.getElementById('avatarPreview');
 
@@ -159,11 +175,14 @@
           reader.onload = () => {
             avatarPreview.src = reader.result;
             avatarPreview.style.display = 'block';
+            avatar = reader.result;
+            saveUserData();
+            socket.emit('setUsername', { username, avatar });
           };
           reader.readAsDataURL(file);
         }
       });
-    });
+    }
   </script>
 </body>
 </html>
