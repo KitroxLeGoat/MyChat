@@ -1,21 +1,47 @@
 let socket;
 let username = "";
+let avatar = "";
 let currentChannel = "general";
 const typingTimeouts = {};
 
 function setUsername() {
-  username = document.getElementById("usernameInput").value.trim();
+  const input = document.getElementById("usernameInput");
+  const fileInput = document.getElementById("avatarInput");
+
+  username = input.value.trim();
+
   if (username) {
-    localStorage.setItem("username", username); // ✅ Sauvegarde
-
-    document.getElementById("login").classList.add("hidden");
-    document.getElementById("chat").classList.remove("hidden");
-
-    socket = io();
-    socket.emit("setUsername", username);
-
-    setupSocketListeners();
+    // Lire le fichier d'avatar s'il existe
+    const file = fileInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        avatar = reader.result;
+        saveUserData();
+        connectSocket();
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Avatar déjà en mémoire ou vide
+      avatar = localStorage.getItem("avatar") || "";
+      saveUserData();
+      connectSocket();
+    }
   }
+}
+
+function saveUserData() {
+  localStorage.setItem("username", username);
+  localStorage.setItem("avatar", avatar);
+}
+
+function connectSocket() {
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("chat").classList.remove("hidden");
+
+  socket = io();
+  socket.emit("setUsername", { username, avatar });
+  setupSocketListeners();
 }
 
 function setupSocketListeners() {
@@ -23,29 +49,28 @@ function setupSocketListeners() {
     const ul = document.getElementById("usersList");
     ul.innerHTML = "";
     users.forEach(user => {
-      if (user !== username) {
+      if (user.username !== username) {
         const li = document.createElement("li");
-        li.textContent = user;
-        li.onclick = () => switchToPrivate(user);
+        li.innerHTML = `<img src="${user.avatar}" alt="" style="width:24px; height:24px; border-radius:50%; vertical-align:middle; margin-right:6px;">${user.username}`;
+        li.onclick = () => switchToPrivate(user.username);
         ul.appendChild(li);
       }
     });
   });
 
-  socket.on("message", ({ from, to, msg }) => {
+  socket.on("message", ({ from, to, msg, avatar }) => {
     const div = document.getElementById("messages");
     const p = document.createElement("p");
-    p.textContent = `[${from}] ${msg}`;
+    p.innerHTML = `<img src="${avatar}" style="width:24px; height:24px; border-radius:50%; vertical-align:middle; margin-right:6px;"><strong>[${from}]</strong> ${msg}`;
     div.appendChild(p);
     div.scrollTop = div.scrollHeight;
   });
 
-  socket.on("image", ({ from, to, image }) => {
+  socket.on("image", ({ from, to, image, avatar }) => {
     const div = document.getElementById("messages");
-    const img = document.createElement("img");
-    img.src = image;
-    img.classList.add("chat-image");
-    div.appendChild(img);
+    const imgWrap = document.createElement("div");
+    imgWrap.innerHTML = `<p><img src="${avatar}" style="width:24px; height:24px; border-radius:50%; vertical-align:middle; margin-right:6px;"><strong>[${from}]</strong></p><img src="${image}" class="chat-image">`;
+    div.appendChild(imgWrap);
     div.scrollTop = div.scrollHeight;
   });
 
@@ -100,22 +125,21 @@ function sendImage() {
 
 function resetUsername() {
   localStorage.removeItem("username");
+  localStorage.removeItem("avatar");
   location.reload();
 }
 
 document.getElementById('imageInput').addEventListener('change', sendImage);
 
-// ✅ Auto-login si un pseudo est déjà enregistré
+// ✅ Auto-login si pseudo + avatar déjà enregistrés
 window.addEventListener("DOMContentLoaded", () => {
   const saved = localStorage.getItem("username");
+  const savedAvatar = localStorage.getItem("avatar");
+
   if (saved) {
     username = saved;
-    document.getElementById("login").classList.add("hidden");
-    document.getElementById("chat").classList.remove("hidden");
+    avatar = savedAvatar || "";
 
-    socket = io();
-    socket.emit("setUsername", username);
-
-    setupSocketListeners();
+    connectSocket();
   }
 });

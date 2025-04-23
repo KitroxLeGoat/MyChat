@@ -7,91 +7,99 @@ const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 
-let users = {}; // Objet pour stocker les utilisateurs connectés
-let messageHistory = []; // Tableau pour stocker l'historique des messages
+// ✅ Utilisateurs avec pseudo + avatar
+let users = {}; // { socket.id: { username: "xxx", avatar: "data:image..." } }
 
-// Sert les fichiers statiques du dossier 'public'
+// Fichiers statiques
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Route d'accueil
+// Page d'accueil
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html')); // Assurez-vous que 'index.html' existe dans 'public'
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 io.on('connection', (socket) => {
   console.log('Un utilisateur est connecté');
 
-  // Quand un utilisateur définit son pseudo
-  socket.on('setUsername', (username) => {
-    users[socket.id] = username;
-    io.emit('userList', Object.values(users)); // Envoie la liste des utilisateurs à tous
-
-    // Envoie l'historique des messages au nouvel utilisateur
-    messageHistory
-      .filter(msg => msg.to === "general") // Filtre pour les messages du canal général
-      .forEach(msg => {
-        socket.emit('message', msg); // Envoie chaque message du canal général
-      });
+  // ✅ Réception du pseudo + avatar
+  socket.on('setUsername', ({ username, avatar }) => {
+    users[socket.id] = { username, avatar };
+    updateUserList();
   });
 
-  // Quand un message est envoyé
+  // ✅ Message texte
   socket.on('message', ({ to, msg }) => {
-    const from = users[socket.id];
-    const messageData = { from, to, msg };
+    const sender = users[socket.id];
+    if (!sender) return;
 
-    // Enregistre le message dans l'historique
-    messageHistory.push(messageData);
+    const payload = {
+      from: sender.username,
+      avatar: sender.avatar,
+      to,
+      msg
+    };
 
-    // Limite l'historique à 100 messages
-    if (messageHistory.length > 100) {
-      messageHistory.shift(); // Supprime le message le plus ancien
-    }
-
-    // Diffusion du message
     if (to === "general") {
-      io.emit('message', messageData);
+      io.emit('message', payload);
     } else {
-      const userSocket = Object.keys(users).find(key => users[key] === to);
-      if (userSocket) {
-        io.to(userSocket).emit('message', messageData);
+      const recipientSocket = Object.keys(users).find(id => users[id].username === to);
+      if (recipientSocket) {
+        io.to(recipientSocket).emit('message', payload);
       }
     }
   });
 
-  // ✅ Gestion des images
+  // ✅ Image
   socket.on('image', ({ to, image }) => {
+    const sender = users[socket.id];
+    if (!sender) return;
+
+    const payload = {
+      from: sender.username,
+      avatar: sender.avatar,
+      to,
+      image
+    };
+
     if (to === "general") {
-      io.emit('image', { from: users[socket.id], to: "general", image });
+      io.emit('image', payload);
     } else {
-      const userSocket = Object.keys(users).find(key => users[key] === to);
-      if (userSocket) {
-        io.to(userSocket).emit('image', { from: users[socket.id], to, image });
+      const recipientSocket = Object.keys(users).find(id => users[id].username === to);
+      if (recipientSocket) {
+        io.to(recipientSocket).emit('image', payload);
       }
     }
   });
 
-  // Indicateur "en train d'écrire"
+  // ✅ "Typing"
   socket.on('typing', (to) => {
-    if (!users[socket.id]) return; // Ignore si l'utilisateur n'est pas défini
+    const sender = users[socket.id];
+    if (!sender) return;
+
     if (to === "general") {
-      socket.broadcast.emit("typing", users[socket.id]); // Envoie à tous sauf à l'expéditeur
+      socket.broadcast.emit("typing", sender.username);
     } else {
-      const userSocket = Object.keys(users).find(key => users[key] === to);
-      if (userSocket) {
-        io.to(userSocket).emit("typing", users[socket.id]); // Envoie à l'utilisateur spécifique
+      const recipientSocket = Object.keys(users).find(id => users[id].username === to);
+      if (recipientSocket) {
+        io.to(recipientSocket).emit("typing", sender.username);
       }
     }
   });
 
-  // Quand un utilisateur se déconnecte
+  // ✅ Déconnexion
   socket.on('disconnect', () => {
     delete users[socket.id];
-    io.emit('userList', Object.values(users)); // Met à jour la liste des utilisateurs
+    updateUserList();
   });
+
+  // 🔁 Fonction pour mettre à jour la liste des utilisateurs
+  function updateUserList() {
+    const userList = Object.values(users).map(u => ({ username: u.username, avatar: u.avatar }));
+    io.emit('userList', userList);
+  }
 });
 
-// Remplacer localhost:3000 par le port fourni par Render
-const port = process.env.PORT || 3000; // Utilise le port fourni par Render, sinon utilise 3000
+const port = process.env.PORT || 3000;
 server.listen(port, () => {
   console.log(`Serveur en ligne sur http://localhost:${port}`);
 });
