@@ -1,62 +1,98 @@
-const socket = io();
+const socket = io(); // Connexion au serveur WebSocket
 
-let currentChannel = 'general';
-let username = null;
-let avatar = null;
+let currentUser = ''; // Nom d'utilisateur actuel
+let currentChannel = 'public'; // Canal actif (public ou privé)
+let selectedUser = ''; // Utilisateur sélectionné pour un chat privé
 
-const setUsername = () => {
-  username = document.getElementById('usernameInput').value;
-  avatar = document.getElementById('avatarInput').files[0];
-  
-  if (username) {
-    socket.emit('join', { username, avatar });
-    document.getElementById('login').classList.add('hidden');
-    document.getElementById('chat').classList.remove('hidden');
-    document.getElementById('channelTitle').textContent = `Canal ${currentChannel.charAt(0).toUpperCase() + currentChannel.slice(1)}`;
+// Initialisation des éléments du DOM
+const messageInput = document.getElementById('messageInput');
+const messagesDiv = document.getElementById('messages');
+const usersList = document.getElementById('usersList');
+const channelTitle = document.getElementById('channelTitle');
+const privateChatControls = document.getElementById('privateChatControls');
+const privateChatSelect = document.getElementById('privateChatSelect');
+
+// Lorsque l'utilisateur envoie un message
+function sendMessage() {
+  const messageText = messageInput.value;
+  if (messageText.trim() !== '') {
+    const messageData = {
+      user: currentUser,
+      text: messageText,
+      channel: currentChannel,
+      recipient: selectedUser, // Utilisateur destinataire du chat privé
+    };
+    socket.emit('sendMessage', messageData); // Envoie du message
+    displayMessage('sent', messageText);
+    messageInput.value = ''; // Réinitialise l'input
   }
-};
+}
 
-const resetUsername = () => {
-  username = null;
-  avatar = null;
-  document.getElementById('usernameInput').value = '';
-  document.getElementById('avatarInput').value = '';
-  document.getElementById('login').classList.remove('hidden');
-  document.getElementById('chat').classList.add('hidden');
-};
+// Affichage des messages dans la fenêtre de chat
+function displayMessage(type, text) {
+  const messageDiv = document.createElement('div');
+  messageDiv.classList.add('message', type);
+  messageDiv.textContent = text;
+  messagesDiv.appendChild(messageDiv);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight; // Faire défiler vers le bas
+}
 
-const sendMessage = () => {
-  const message = document.getElementById('messageInput').value;
-  if (message) {
-    socket.emit('message', { message, channel: currentChannel });
-    document.getElementById('messageInput').value = '';
-  }
-};
-
-socket.on('message', (data) => {
-  const messageElement = document.createElement('div');
-  messageElement.textContent = `${data.username}: ${data.message}`;
-  document.getElementById('messages').appendChild(messageElement);
-});
-
-socket.on('typing', (username) => {
-  const typingIndicator = document.getElementById('typingIndicator');
-  typingIndicator.textContent = `${username} est en train de taper...`;
-  setTimeout(() => typingIndicator.textContent = '', 2000);
-});
-
-socket.on('users', (users) => {
-  const usersList = document.getElementById('usersList');
+// Fonction pour afficher les utilisateurs connectés
+function updateUsersList(users) {
   usersList.innerHTML = '';
   users.forEach(user => {
-    const userItem = document.createElement('li');
-    userItem.textContent = user.username;
-    usersList.appendChild(userItem);
+    const li = document.createElement('li');
+    li.textContent = user;
+    li.onclick = () => startPrivateChat(user);
+    usersList.appendChild(li);
   });
+}
+
+// Fonction pour démarrer un chat privé
+function startPrivateChat(user) {
+  selectedUser = user;
+  currentChannel = 'private';
+  privateChatControls.style.display = 'block';
+  privateChatSelect.style.display = 'none';
+  channelTitle.textContent = `Chat privé avec ${selectedUser}`;
+  messagesDiv.innerHTML = ''; // Effacer l'historique des messages
+}
+
+// Retour au chat général
+function switchToGeneral() {
+  currentChannel = 'public';
+  selectedUser = '';
+  privateChatControls.style.display = 'none';
+  privateChatSelect.style.display = 'block';
+  channelTitle.textContent = 'Canal Général';
+  messagesDiv.innerHTML = ''; // Effacer l'historique des messages
+}
+
+// Lorsque l'utilisateur change de pseudo ou se déconnecte
+function setUsername() {
+  const username = prompt('Entrez votre pseudo :');
+  if (username) {
+    currentUser = username;
+    document.getElementById('username').textContent = currentUser;
+    socket.emit('setUsername', currentUser); // Envoyer au serveur
+  }
+}
+
+// Se déconnecter
+function logout() {
+  socket.emit('logout');
+  alert('Déconnecté');
+}
+
+// Réception des messages du serveur
+socket.on('message', (message) => {
+  displayMessage(message.type, message.text);
 });
 
-const switchToGeneral = () => {
-  currentChannel = 'general';
-  document.getElementById('channelTitle').textContent = 'Canal Général';
-  document.getElementById('privateChatControls').style.display = 'none';
-};
+// Réception de la mise à jour des utilisateurs connectés
+socket.on('updateUsers', (users) => {
+  updateUsersList(users);
+});
+
+// Initialiser l'utilisateur au début
+setUsername();

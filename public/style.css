@@ -1,77 +1,120 @@
-/* Style global */
+/* Mise en page générale */
 body {
   font-family: Arial, sans-serif;
-  background-color: #f4f4f9;
-  color: #333;
+  display: flex;
+  height: 100vh;
+  margin: 0;
 }
 
-.hidden {
-  display: none;
-}
-
-/* Section de connexion */
-#login {
+/* Barre latérale */
+#sidebar {
+  width: 300px;
+  background-color: #075e54;
+  color: white;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-top: 50px;
 }
 
-#usernameInput,
-#avatarInput {
-  margin: 10px;
+#profile img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+}
+
+#profile h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+#usersList {
+  list-style-type: none;
+  padding: 0;
+}
+
+#usersList li {
+  margin: 10px 0;
+  font-size: 16px;
 }
 
 button {
-  background-color: #007bff;
-  color: white;
+  background-color: #25d366;
   border: none;
-  padding: 10px 20px;
+  color: white;
+  padding: 10px;
   cursor: pointer;
   border-radius: 5px;
+  margin-top: 20px;
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: #128c7e;
 }
 
-/* Section de chat */
-#chat {
+/* Fenêtre de chat */
+#chatWindow {
+  flex-grow: 1;
+  background-color: #e5ddd5;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
 header {
-  background-color: #007bff;
-  width: 100%;
+  background-color: #128c7e;
+  color: white;
   padding: 10px;
   text-align: center;
-  color: white;
 }
 
 #messages {
-  width: 80%;
-  max-width: 600px;
-  padding: 20px;
-  border: 1px solid #ddd;
+  flex-grow: 1;
   margin-top: 20px;
-  max-height: 300px;
-  overflow-y: scroll;
-}
-
-#inputContainer {
-  display: flex;
-  align-items: center;
+  overflow-y: auto;
+  padding-right: 10px;
 }
 
 #messageInput {
-  width: 80%;
+  width: calc(100% - 100px);
   padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
   margin-right: 10px;
-  border-radius: 5px;
+}
+
+#inputArea {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
 }
 
 #imageInput {
   margin-left: 10px;
+}
+
+#privateChatControls {
+  display: none;
+  margin-top: 20px;
+}
+
+#privateChatSelect {
+  margin-right: 10px;
+}
+
+.message {
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  margin: 5px 0;
+  max-width: 70%;
+}
+
+.message.sent {
+  background-color: #dcf8c6;
+  align-self: flex-end;
+}
+
+.message.received {
+  background-color: #fff;
 }

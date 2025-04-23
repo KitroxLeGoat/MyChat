@@ -3,52 +3,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mini Chat App</title>
+  <title>Chat WhatsApp</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-  <div id="login">
-    <h2>Choisis un pseudo</h2>
-    <input id="usernameInput" type="text" placeholder="Ton pseudo" />
-    <br />
-    <label for="avatarInput">Choisis une photo</label>
-    <input id="avatarInput" type="file" accept="image/*" />
-    <br />
-    <button onclick="setUsername()">Entrer dans le chat</button>
+  <!-- Barre latérale (contacts et paramètres) -->
+  <div id="sidebar">
+    <div id="profile">
+      <img id="profileImage" src="https://www.whatsapp.com/img/favicon/256.png" alt="Profil">
+      <h2 id="username">Nom d'utilisateur</h2>
+    </div>
+    <ul id="usersList">
+      <!-- Liste des utilisateurs connectés -->
+    </ul>
+    <button onclick="logout()">Se déconnecter</button>
   </div>
 
-  <div id="chat" class="hidden">
+  <!-- Fenêtre de chat -->
+  <div id="chatWindow">
     <header>
-      <h1>Mini Chat</h1>
-      <button id="settingsBtn">⚙️</button>
+      <h3 id="channelTitle">Canal Général</h3>
     </header>
 
-    <div id="settingsMenu">
-      <button onclick="resetUsername()">Changer pseudo</button>
-      <button id="changeAvatarBtn">Changer photo</button>
+    <div id="messages">
+      <!-- Messages s'affichent ici -->
     </div>
 
-    <div id="channelTitle">Canal Général</div>
-
-    <div id="typingIndicator"></div>
-
-    <div id="messages"></div>
-
-    <div id="privateChatControls" style="display:none;">
-      <button onclick="switchToGeneral()">Retour au général</button>
-    </div>
-
-    <div id="inputContainer">
-      <input id="messageInput" type="text" placeholder="Tape un message..." oninput="socket.emit('typing', currentChannel)" />
+    <div id="inputArea">
+      <input type="text" id="messageInput" placeholder="Écris un message..." />
       <button onclick="sendMessage()">Envoyer</button>
       <input type="file" id="imageInput" accept="image/*" />
     </div>
 
-    <h3>Utilisateurs connectés :</h3>
-    <ul id="usersList"></ul>
+    <!-- Liste des contacts et possibilité de commencer un chat privé -->
+    <div id="privateChatControls" style="display: none;">
+      <button onclick="switchToGeneral()">Retour au canal général</button>
+      <select id="privateChatSelect">
+        <option value="">Choisir un utilisateur</option>
+      </select>
+      <button onclick="startPrivateChat()">Démarrer un chat privé</button>
+    </div>
   </div>
 
-  <script src="/socket.io/socket.io.js"></script>
   <script src="client.js"></script>
 </body>
 </html>
